@@ -1,0 +1,182 @@
+temptemp = PartInstallbase[,-2]
+library(dplyr)
+temp=filter(temp, temp$PartFamily !='PH')
+temp=filter(temp, temp$PartFamily !='TB')
+temp=filter(temp, temp$StartDate >='20080100')
+temp = temp[,-2:-4]
+temp = temp[,-2:-4]
+len = length(temp)
+temp = temp[,-(len-10):-len]
+
+
+
+library(RODBC)
+mycon<-odbcConnect("mssql_data",uid="admin",pwd="ssc123")
+consumption =sqlQuery(mycon,"SELECT Part_No,Week,Quantity,TopmostPN FROM PCGSPConsumption")
+write.csv(consumption,file="topmost_consumption.csv")
+#save temp data in csv
+
+
+
+
+f2=function(data){
+len= length(data)
+name= data[,1]
+
+t=matrix(NA,nrow=0,ncol=0)
+for( i in 2:len){
+  t1=tapply(data[,i],data[,1],sum,na.rm=TRUE)
+  t=cbind(t,t1)
+}
+return(t)
+}
+
+#should be 546416 obs. of 266 vars
+
+temp3=temp[,-1]
+f3=function(data){
+  t=tapply(data,temp[,1],sum,na.rm=T)
+  return(t)
+}
+x=apply(temp3,2,f3)
+write.csv(x,file="groupbyPN.csv")
+
+#unique line:
+a=pn_lc_mapping  %>%
+  +     group_by(Part_No, Lifecycle) %>%
+  +     filter(row_number() == 1) %>%
+  +     ungroup()
+
+#easy way:
+pn_mapping= base::unique(pn_mapping) 
+m1 <- merge(weekly_consumption, pn_mapping, by.x = "X", by.y = "Part_No",all.x=TRUE)
+#non-zero
+
+avg= apply(weekly_consumption[,-1],1,mean)
+index = which(avg ==0)
+temp =weekly_consumption[-index,]
+
+#non zero number and first non zero pos
+t=matrix(NA,nrow=49159,ncol=1)
+t2=matrix(NA,nrow=49159,ncol=1)
+t3=matrix(NA,nrow=49159,ncol=1)
+f =function(data){
+  num =0
+  temp = which(data>0)
+  num=length(temp)
+  a = list(num,temp[1])
+  return(a)}
+for (i in 1:49159){
+  +          temp = f(consumpution[i,-1])#need -last3 also
+  +         t[i]=as.numeric(temp[1])
+  +         t2[i]=as.numeric(temp[2])}
+
+
+#get times
+a = table(unlist(map_cc$PN))
+#get longest nonzero seqs
+f2= function(a){
+  a[a > 0] <- 1
+  a <- paste(a,collapse="")
+  a <- gsub("101","111",a)
+  a <- gsub("101","111",a)
+  a <- gsub("101","111",a)
+  a <- gsub("101","111",a)
+  a <- gsub("0+",",",a)        
+  b <- strsplit(a,",")          
+  b <- sapply(b,nchar)      
+  return(max(b))
+}
+
+for (i in 1:49159){
+  + t3[i] =f2(consumpution[i,])}
+
+#pick sample
+#rownames(norm.data) = temp3[,1]
+#row.name= temp3[,1]
+x=matrix(0,nrow=8,ncol=10)
+for (j in 1:10){
+    a = sample(row.name,5000)
+    samp = temp[a,]
+    for (i in 2:8){
+        result <- kmeans(temp,i)
+        stats=cluster.stats(dist(samp), result$cluster[a])
+        x[i,j]=stats$avg.silwidth 
+        print(i)}}
+
+min.max.norm <-function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+norm.data <- data.frame(STD = min.max.norm(temp[,1]),
+                        +                         COUNT_OL = min.max.norm(temp[,2]),
+                        +                         MAX = min.max.norm(temp[,3]),
+                        +                         COUNT_NONZERO = min.max.norm(temp[,4]),
+                        +                         FIRST_NONZERO = temp[,5],
+                        +                         CONS_WEEK = min.max.norm(temp[,6]))
+
+rst <- sapply(K,function(i){
+  print(paste("K=",i))
+  mean(sapply(1:round,function(r){
+    print(paste("Round",r))
+    result <- kmeans(temp, i)
+    stats <- cluster.stats(dist(samp), result$cluster[a])
+    stats$avg.silwidth
+  }))
+})
+
+
+
+for (j in 1:10){
+       a = sample(row.name,5000)
+       samp = norm.data[a,]
+       for (i in 2:8){
+             result <- kmeans(norm.data,i)
+             stats=cluster.stats(dist(samp), result$cluster[a])
+             x[i,j]=stats$avg.silwidth 
+             print(i)}}
+
+
+
+#till now nousage date
+f2 =function(a){
+       b = which(is.na(a))
+       if (length(b)==0){
+             index=length(a)
+         }
+       else{
+         index = b[1]-1}
+       a = as.numeric(a)
+       if(a[index] !=0){
+             return(0)
+             break
+         }
+       for(i in 1:index)
+         {
+               if(a[index-i+1] ==0 & a[index-i] != 0){
+                     return(i)
+                     break}
+               
+             }
+}
+f = function(a){
+       gap = as.numeric(difftime(a[2],a[1]))
+       month = gap %/% 30
+       return(month)
+   }
+
+
+short_index = which (is.na(monthly_consumption$X11))
+short = monthly_consumption[short_index,]
+short = short[1:11]
+
+function(a){
+  a = as.numeric(a)
+  b = as.numeric(a[-1])
+  a[a=0] <= 1
+  c=abs(b/a[-length(a)])-1
+  c = t(c)
+  return(c)
+}
+
+a =substr(ap_consumption$Parttypename, 0, 2)
+#merge(by = c())
